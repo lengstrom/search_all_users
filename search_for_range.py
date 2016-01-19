@@ -1,7 +1,7 @@
 import pandas as pd, math, boto3, sys, os, subprocess, pdb, time, requests
 from subprocess import Popen
 s3 = boto3.resource('s3')
-
+diagnostic=False
 def extract_data(json):
     records = []
     for item in json['items']:
@@ -17,8 +17,9 @@ def archive_data(Key, bucket, search_res):
     df =  pd.DataFrame(search_res, columns=['html', 'api', 'name', 'fork'])
     assert len(search_res) == df.shape[0]
     csv = df.to_csv()
-    with open(Key, 'w') as f:
-        f.write(csv)
+    if diagnostic:
+        with open(Key, 'w') as f:
+            f.write(csv)
 
     bucket.put_object(Key=Key, Body=csv)
 
@@ -60,20 +61,39 @@ def complete_request(request_str, user, token, fn):
 if __name__ == "__main__":
     _, user, token, authors_key = sys.argv
     out = authors_key + '.h5'
-    s3.Bucket('ghscraping').download_file(authors_key, out)
+
+    try:
+        s3.meta.client.head_bucket(Bucket=authors_key)
+    except Exception as e:
+        # If a client error is thrown, then check that it was a 404 error.
+        # If it was a 404 error, then the bucket does not exist.
+        error_code = int(e.response['Error']['Code'])
+        if error_code == 404:
+            s3.create_bucket(Bucket=authors_key)
+        else:
+            raise Exception('Other error')
+
+    bucket = s3.Bucket(authors_key)
+    gotten_repos = [int(i.key) for i in bucket.objects.page_size(1000000)]
+    
+    if not os.path.exists(out):
+        s3.Bucket('ghscraping').download_file(authors_key, out)
+
     ul_prefix = authors_key + '/'
     store = pd.HDFStore(out, 'r')
     df = store['df']
     store.close()
+
     incomplete = []
     files = {}
     n = 0
     out_dir = './out'
-    all_files = os.listdir(ul_prefix)
-    if len(all_files) == 0:
+
+    if len(gotten_repos) == 0:
         max_so_far = 0
     else:
-        max_so_far = max(map(lambda x: int(x), all_files))
+        max_so_far = max(gotten_repos)
+    print "Starting at %s" % (max_so_far,)
     # user : {{user}}, language:bash
     # to get:
     #     [items] -> html_url
@@ -82,13 +102,13 @@ if __name__ == "__main__":
     #     [items] -> repository -> fork
     # OR
     # "message" == "API rate limit"
-    bucket = s3.Bucket('ghfiles')
     search_res = []
     n = 1
+    pdb.set_trace()
     for i in xrange(max_so_far, df.shape[0]):
         if n % 10 == 0: #should be 900
             print "Archiving %s" % n
-            archive_data(ul_prefix + str(n), bucket, search_res)
+            archive_data(str(n), bucket, search_res)
             del search_res[:]
         file_complete = False
         author =  df.iloc[i]
@@ -100,7 +120,5 @@ if __name__ == "__main__":
             search_GET_string = 'https://api.github.com/search/code?q=language:shell+user:%s' % author
             search_res += complete_request(search_GET_string, user, token, process_search_request)
         n += 1
-        if n % 10 == 0:
-            archive_data(ul_prefix + str(n), bucket, search_res)
 
-    archive_data(ul_prefix + str(n), bucket, search_res)
+    archive_data(str(n), bucket, search_res)
