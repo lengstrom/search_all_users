@@ -43,6 +43,7 @@ def process_search_request(r):
     if 'Validation Failed' in json['message']:
         print "    >>> validation failed!"
         return ([], True)
+    raise Exception('Unknown search response!')
         
 def complete_request(request_str, user, token, fn):
     request_complete = False
@@ -107,7 +108,7 @@ if __name__ == "__main__":
     for i in xrange(max_so_far, df.shape[0]):
         if n % 10 == 0: #should be 900
             print "Archiving %s" % n
-            archive_data(str(n), bucket, search_res)
+            archive_data(str(i), bucket, search_res)
             del search_res[:]
         file_complete = False
         author =  df.iloc[i]
@@ -120,4 +121,4 @@ if __name__ == "__main__":
             search_res += complete_request(search_GET_string, user, token, process_search_request)
         n += 1
 
-    archive_data(str(n), bucket, search_res)
+    archive_data(str(i), bucket, search_res)
