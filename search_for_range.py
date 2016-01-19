@@ -104,7 +104,6 @@ if __name__ == "__main__":
     # "message" == "API rate limit"
     search_res = []
     n = 1
-    pdb.set_trace()
     for i in xrange(max_so_far, df.shape[0]):
         if n % 10 == 0: #should be 900
             print "Archiving %s" % n
