@@ -1,5 +1,6 @@
 import pandas as pd, math, boto3, sys, os, subprocess, pdb, time, requests
 from subprocess import Popen
+
 s3 = boto3.resource('s3')
 diagnostic=False
 def extract_data(json):
