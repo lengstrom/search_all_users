@@ -32,10 +32,31 @@ if __name__ == "__main__":
         store['df'] = subgroups[i]
         print "%s shape : %s" % (i, subgroups[i].shape)
         store.close()
+        data = open(store_path, 'rb')
+        key = "authors_" + str(i)
+        keys.append(key)
         if aws_ul == "1":
-            data = open(store_path, 'rb')
-            key = "authors_" + str(i)
-            keys.append(key)
             bucket.put_object(Key=(key), Body=data)
 
     job_params = zip(tokens['user'].values, tokens['token'].values, keys)
+    with open(os.path.join(os.path.expanduser('~'), '.aws/config'),'r') as f:
+        config = f.read()
+        config = config.replace('\n', '\\n')
+        
+    with open(os.path.join(os.path.expanduser('~'), '.aws/credentials'),'r') as f:
+        credentials = f.read()
+        credentials = credentials.replace('\n', '\\n')
+
+    with open('./user-data.sh','r') as f:
+        base = f.readlines()
+
+    base.append("printf \"%s\" > ~/.aws/config \n" % config)
+    base.append("printf \"%s\" > ~/.aws/credentials \n" % credentials)
+
+    for i in job_params:
+        user, token, key = i
+        cp = base[:]
+        cp.append('python search_for_range.py "%s" "%s" "%s"' % (user, token, key))
+        with open(os.path.join('amazon', key), 'w') as f:
+            f.writelines(cp)
+        
