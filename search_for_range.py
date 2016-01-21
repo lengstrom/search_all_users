@@ -36,7 +36,9 @@ def process_search_request(r):
     json = r.json()
     if r.headers['status'] == '200 OK':
         print "    >>> 200! OK search results"
-        return (extract_data(json), True)
+        data = extract_data(json)
+        print "    >>> %s" % (data,)
+        return (data, True)
     if 'API rate limit' in json['message']:
         print "    >>> search results: error msg: %s" % (json,)
         return (False, False)
@@ -106,7 +108,7 @@ if __name__ == "__main__":
     search_res = []
     n = 1
     for i in xrange(max_so_far, df.shape[0]):
-        if n % 10 == 0: #should be 900
+        if n % 450 == 0: #should be 900
             print "Archiving %s" % n
             archive_data(str(i), bucket, search_res)
             del search_res[:]

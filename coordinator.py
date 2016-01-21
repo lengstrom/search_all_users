@@ -9,16 +9,17 @@ def get_df(path):
     return df
 
 if __name__ == "__main__":
-    _, tokens_path, repos_list, aws_ul = sys.argv
+    _, tokens_path, author_list_path, aws_ul = sys.argv
     tokens = get_df(tokens_path)
-    repos_list = get_df(repos_list)['author'].drop_duplicates()
-    print "repos_list Shape: %s" % repos_list.shape
+    df = get_df(author_list_path)
+    author_list = df[df['fork'] == 0]['author'].drop_duplicates()
+    print "author_list Shape: %s" % author_list.shape
 
     num_tokens = tokens.shape[0]
-    num_repos = repos_list.shape[0]
-    num_per_subgroup = int(math.ceil(float(num_repos)/num_tokens))
+    num_authors = author_list.shape[0]
+    num_per_subgroup = int(math.ceil(float(num_authors)/num_tokens))
 
-    subgroups = [repos_list.iloc[i * num_per_subgroup:(i+1) * num_per_subgroup] for i in range(num_tokens)]
+    subgroups = [author_list.iloc[i * num_per_subgroup:(i+1) * num_per_subgroup] for i in range(num_tokens)]
 
     # s3
     bucket = s3.Bucket('ghscraping')
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         store.close()
         if aws_ul == "1":
             data = open(store_path, 'rb')
-            key = "repos_" + str(i)
+            key = "authors_" + str(i)
             keys.append(key)
             bucket.put_object(Key=(key), Body=data)
 
