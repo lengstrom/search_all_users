@@ -109,7 +109,7 @@ if __name__ == "__main__":
     search_res = []
     n = 1
     for i in xrange(max_so_far, df.shape[0]):
-        if n % 30 == 0:
+        if n % 450 == 0:
             print "Archiving %s" % n
             archive_data(str(i), bucket, search_res)
             del search_res[:]

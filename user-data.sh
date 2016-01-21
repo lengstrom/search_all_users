@@ -1,4 +1,5 @@
 #!/bin/bash
+sudo su
 apt-get update -y -q
 apt-get install -q -y python-pip python-dev libhdf5-serial-dev htop
 
