@@ -58,6 +58,7 @@ def complete_request(request_str, user, token, fn):
             reset_time = int(r.headers['x-ratelimit-reset'])
             time_to_wait = reset_time - time.time() + 3
             print ">>> No requests left... waiting %s secs until time %s " % (time_to_wait, reset_time)
+            time_to_wait = max(time_to_wait, 1)
             time.sleep(time_to_wait)
 
     return res
