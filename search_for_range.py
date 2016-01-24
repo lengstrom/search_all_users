@@ -38,6 +38,9 @@ def process_does_user_exist(r):
 
 def process_search_request(r):
     json = r.json()
+    if not 'status' in r.headers:
+        print ">>> User doesn't exist!"
+        return (False, True)
     if r.headers['status'] == '200 OK':
         print "    >>> 200! OK search results"
         data = extract_data(json)
