@@ -25,6 +25,9 @@ def archive_data(Key, bucket, search_res):
     bucket.put_object(Key=Key, Body=csv)
 
 def process_does_user_exist(r):
+    if not 'status' in r.headers:
+        print ">>> User doesn't exist!"
+        return (False, True)
     if r.headers['status'] == "200 OK":
         print ">>> User exists!"
         return (True, True)
