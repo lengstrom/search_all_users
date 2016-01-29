@@ -116,7 +116,7 @@ if __name__ == "__main__":
     search_res = []
     n = 1
     for i in xrange(max_so_far, df.shape[0]):
-        if n % 450 == 0:
+        if n % 500 == 0:
             print "Archiving %s" % n
             archive_data(str(i), bucket, search_res)
             del search_res[:]
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         print author
         user_exists = complete_request(exists_GET_string, user, token, process_does_user_exist)
         if user_exists:
-            search_GET_string = 'https://api.github.com/search/code?q=language:shell+user:%s' % author
+            search_GET_string = 'https://api.github.com/search/code?q=filename:history+user:%s' % author
             search_res += complete_request(search_GET_string, user, token, process_search_request)
         n += 1
 
