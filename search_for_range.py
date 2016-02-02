@@ -25,6 +25,8 @@ def archive_data(Key, bucket, search_res):
     bucket.put_object(Key=Key, Body=csv)
 
 def process_does_user_exist(r):
+    if r == False:
+        return (False, True)
     if not 'status' in r.headers:
         print ">>> User doesn't exist!"
         return (False, True)
@@ -37,6 +39,8 @@ def process_does_user_exist(r):
     raise Exception("Bad GitHub request!")
 
 def process_search_request(r):
+    if r == False:
+        return (False, True)
     json = r.json()
     if not 'status' in r.headers:
         print ">>> User doesn't exist!"
@@ -57,7 +61,10 @@ def process_search_request(r):
 def complete_request(request_str, user, token, fn):
     request_complete = False
     while not request_complete:
-        r = requests.get(request_str, auth=(user, token))
+        try:
+            r = requests.get(request_str, auth=(user, token))
+        except:
+            return False
         res, request_complete = fn(r)
 
         if 'x-ratelimit-remaining' in r.headers and int(r.headers['x-ratelimit-remaining']) == 0:
@@ -116,12 +123,12 @@ if __name__ == "__main__":
     search_res = []
     n = 1
     for i in xrange(max_so_far, df.shape[0]):
-        if n % 500 == 0:
+        if n % 300 == 0:
             print "Archiving %s" % n
             archive_data(str(i), bucket, search_res)
             del search_res[:]
         file_complete = False
-        author =  df.iloc[i]
+        author = df.iloc[i]
         exists_GET_string = 'https://github.com/%s' % author
 
         print author
