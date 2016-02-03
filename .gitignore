@@ -1,4 +1,5 @@
 staging
+*.h5
 token_store
 amazon
 test
